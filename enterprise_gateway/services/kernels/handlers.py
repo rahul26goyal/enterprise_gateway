@@ -10,7 +10,7 @@ from jupyter_client.jsonutil import date_default
 from tornado import gen, web
 from functools import partial
 from ...mixins import TokenAuthorizationMixin, CORSMixin, JSONErrorsMixin
-
+from notebook.utils import maybe_future
 
 class MainKernelHandler(TokenAuthorizationMixin,
                         CORSMixin,
@@ -110,10 +110,36 @@ class KernelHandler(TokenAuthorizationMixin,
 
     @web.authenticated
     def get(self, kernel_id):
+        self.log.info(f"get kernel info : {kernel_id}")
         km = self.kernel_manager
         km.check_kernel_id(kernel_id)
         model = km.kernel_model(kernel_id)
         self.finish(json.dumps(model, default=date_default))
+
+    @web.authenticated
+    def post(self, kernel_id):
+        self.log.info(f"Post called for method: {kernel_id}")
+        km = self.kernel_manager
+        km.check_kernel_id(kernel_id)
+        kernel = km.get_kernel(kernel_id)
+        print(f"kerneL : {kernel}")
+        body = self.get_json_body()
+        if body is not None:
+            print(f"Request body: {body}")
+            # update kernel object.
+            kernel.set_user_updates(body)
+            try:
+                # yield maybe_future(km.restart_kernel(kernel_id))
+                km.restart_kernel(kernel_id)
+            except Exception as e:
+                self.log.error("Exception restarting kernel", exc_info=True)
+                self.set_status(500)
+            else:
+                # model = yield maybe_future(km.kernel_model(kernel_id))
+                model = km.kernel_model(kernel_id)
+                self.write(json.dumps(model, default=date_default))
+        self.finish()
+        #self.finish(json.dumps(km.kernel_model(kernel_id), default=date_default))
 
 
 default_handlers = []

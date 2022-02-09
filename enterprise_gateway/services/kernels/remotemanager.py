@@ -215,6 +215,7 @@ class RemoteKernelManager(IOLoopKernelManager):
         self.kernel_id = None
         self.user_overrides = {}
         self.restarting = False  # need to track whether we're in a restart situation or not
+        self.user_updates = {}
 
     def start_kernel(self, **kwargs):
         """Starts a kernel in a separate process.
@@ -248,11 +249,29 @@ class RemoteKernelManager(IOLoopKernelManager):
                                     if key.startswith('KERNEL_') or
                                     key in self.parent.parent.env_process_whitelist or
                                     key in self.parent.parent.env_whitelist})
+        self._capture_user_updates(**kwargs)
+        self.log.info("update the environment variables now as we need to reflect in kernel spec file.")
+        env.update(self.user_overrides)
+
+    def _capture_user_updates(self, **kwargs):
+        self.log.info("Applying user kernel updates....")
+        env = self.user_updates.get('env', {})
+        for key, value in env.items():
+            # if key in self.user_overrides.keys():
+            #     value = self.user_overrides.get(key) + " " + value
+            self.user_overrides.update({key: value})
+
+    def set_user_updates(self, update_body):
+        self.log.info(f"Setting the user_updates: {update_body}")
+        self.user_updates = update_body
+        self.kernel_cmd = list()  # the kerenl template envs were not getting updated ..i think this will fix that.
+        #env.update(self._get_env_substitutions(self.kernel_spec.env, env)) # this is the possible other option.
 
     def format_kernel_cmd(self, extra_arguments=None):
         """ Replace templated args (e.g. {response_address}, {port_range}, or {kernel_id}). """
+        self.log.info(f"Current kernel_cmd: {self.kernel_cmd}")
         cmd = super(RemoteKernelManager, self).format_kernel_cmd(extra_arguments)
-
+        self.log.info(f"updated kernel_cmd: {self.kernel_cmd}")
         if self.response_address or self.port_range or self.kernel_id:
             ns = self._launch_args.copy()
             if self.response_address:
@@ -280,7 +299,8 @@ class RemoteKernelManager(IOLoopKernelManager):
 
         # Apply user_overrides to enable defaulting behavior from kernelspec.env stanza.  Note that we do this
         # BEFORE setting KERNEL_GATEWAY and removing {EG,KG}_AUTH_TOKEN so those operations cannot be overridden.
-        env.update(self.user_overrides)
+        env.update(self.user_overrides) # this is also problematic for updating extra_opts used in spec as we need to update the substiturte env which happenes
+                                        # in KernelManager class.
 
         # No longer using Kernel Gateway, but retain references of B/C purposes
         env['KERNEL_GATEWAY'] = '1'
