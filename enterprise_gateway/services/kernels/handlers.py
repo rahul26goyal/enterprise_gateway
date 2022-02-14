@@ -86,10 +86,11 @@ class MainKernelHandler(TokenAuthorizationMixin,
         tornado.web.HTTPError
             403 Forbidden if kernel listing is disabled
         """
-        if not self.settings.get('eg_list_kernels'):
-            raise tornado.web.HTTPError(403, 'Forbidden')
-        else:
-            super(MainKernelHandler, self).get()
+        super(MainKernelHandler, self).get()
+        # if not self.settings.get('eg_list_kernels'):
+        #     raise tornado.web.HTTPError(403, 'Forbidden')
+        # else:
+        #     super(MainKernelHandler, self).get()
 
     def options(self, **kwargs):
         """Method for properly handling CORS pre-flight"""
@@ -130,7 +131,10 @@ class KernelHandler(TokenAuthorizationMixin,
             kernel.set_user_updates(body)
             try:
                 # yield maybe_future(km.restart_kernel(kernel_id))
+                self.log.info(f"Before Kernel Ip: {kernel.ip}")
                 km.restart_kernel(kernel_id)
+                kernel.set_refresh_streams(True)
+                self.log.info(f"After Kernel Ip: {kernel.ip}")
             except Exception as e:
                 self.log.error("Exception restarting kernel", exc_info=True)
                 self.set_status(500)

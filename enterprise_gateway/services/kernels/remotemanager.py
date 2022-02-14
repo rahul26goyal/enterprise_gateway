@@ -214,6 +214,7 @@ class RemoteKernelManager(IOLoopKernelManager):
         self.port_range = None
         self.kernel_id = None
         self.user_overrides = {}
+        self.refresh_zmq = False
         self.restarting = False  # need to track whether we're in a restart situation or not
         self.user_updates = {}
 
@@ -260,6 +261,13 @@ class RemoteKernelManager(IOLoopKernelManager):
             # if key in self.user_overrides.keys():
             #     value = self.user_overrides.get(key) + " " + value
             self.user_overrides.update({key: value})
+
+    def refresh_streams(self):
+        return self.refresh_zmq
+
+    def set_refresh_streams(self, value):
+        self.log.info(f"Setting the value for refresh_zmq: {value}")
+        self.refresh_zmq = value
 
     def set_user_updates(self, update_body):
         self.log.info(f"Setting the user_updates: {update_body}")
