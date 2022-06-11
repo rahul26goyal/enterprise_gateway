@@ -28,7 +28,7 @@ class TestEnterpriseGateway(TestHandlers):
         Number of kernels should be limited per user.
         """
 
-        self.get_app()
+        self.get_webapp()
         self.app.max_kernels_per_user = 1
 
         # Request a kernel for bob
@@ -75,7 +75,7 @@ class TestEnterpriseGateway(TestHandlers):
         Verify authorized users can start a kernel, unauthorized users cannot
         """
 
-        self.get_app()
+        self.get_webapp()
         self.app.authorized_users = {"bob", "alice", "bad_guy"}
         self.app.unauthorized_users = {"bad_guy"}
 
@@ -102,7 +102,7 @@ class TestEnterpriseGateway(TestHandlers):
         Verify port-range behaviors are correct
         """
 
-        app = self.get_app()
+        app = self.get_webapp()
         self.app.port_range = "10000..10999"  # range too small
         # Request a kernel for alice - 500 expected
         alice_response = yield self.http_client.fetch(

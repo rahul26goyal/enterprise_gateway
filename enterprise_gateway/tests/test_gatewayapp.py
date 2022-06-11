@@ -127,6 +127,14 @@ class TestGatewayAppBase(AsyncHTTPTestCase, ExpectLog):
         self.app.init_webapp()
         return self.app.web_app
 
+    def get_webapp(self):
+        """
+            Returns the tornado web application instance associated with the current eg_server.
+        """
+        if self.app:
+            return self.app.web_app
+        return self.get_app()
+
     def setup_app(self):
         """Override to configure KernelGatewayApp instance before initializing
         configurables and the web app.

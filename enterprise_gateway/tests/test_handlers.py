@@ -148,7 +148,7 @@ class TestDefaults(TestHandlers):
         )
         self.assertEqual(response.code, 404)
 
-        app = self.get_app()
+        app = self.get_webapp()
         app.settings["allow_origin"] = "*"
 
         response = yield self.http_client.fetch(
@@ -163,7 +163,7 @@ class TestDefaults(TestHandlers):
     def test_auth_token(self):
         """All server endpoints should check the configured auth token."""
         # Set token requirement
-        app = self.get_app()
+        app = self.get_webapp()
         app.settings["eg_auth_token"] = "fake-token"
 
         # Requst API without the token
@@ -250,7 +250,7 @@ class TestDefaults(TestHandlers):
     @gen_test
     def test_cors_headers(self):
         """All kernel endpoints should respond with configured CORS headers."""
-        app = self.get_app()
+        app = self.get_webapp()
         app.settings["eg_allow_credentials"] = "false"
         app.settings["eg_allow_headers"] = "Authorization,Content-Type"
         app.settings["eg_allow_methods"] = "GET,POST"
@@ -275,7 +275,7 @@ class TestDefaults(TestHandlers):
     @gen_test
     def test_max_kernels(self):
         """Number of kernels should be limited."""
-        app = self.get_app()
+        app = self.get_webapp()
         app.settings["eg_max_kernels"] = 1
 
         # Request a kernel
@@ -394,7 +394,7 @@ class TestDefaults(TestHandlers):
     @gen_test
     def test_crud_sessions(self):
         """Server should create, list, and delete sessions."""
-        app = self.get_app()
+        app = self.get_webapp()
         app.settings["eg_list_kernels"] = True
 
         # Ensure no sessions by default
